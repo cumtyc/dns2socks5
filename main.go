@@ -10,6 +10,8 @@ import (
 	"os"
 )
 
+const PacketMaxSize = 64 * 1024
+
 func main() {
 	var flags struct {
 		Bind        string
@@ -33,7 +35,7 @@ func main() {
 		os.Exit(1)
 	}
 	for {
-		buf := make([]byte, 64*1024)
+		buf := make([]byte, PacketMaxSize)
 		n, addr, _ := localConn.ReadFrom(buf)
 		go handleQuery(flags.DNSServer, dialer, network, localConn, n, addr, buf[:n])
 	}
@@ -67,6 +69,7 @@ func handleQuery(dnsServer string, dialer proxy.Dialer, network string, localCon
 		}
 		size = binary.BigEndian.Uint16(lenBuf)
 	}
+	buf = buf[:PacketMaxSize]
 	n, err = conn.Read(buf)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "read data from dns server error:", err)
